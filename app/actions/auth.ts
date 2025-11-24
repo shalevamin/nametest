@@ -14,6 +14,7 @@ const signupSchema = z.object({
   email: z.string().email("כתובת אימייל לא תקינה"),
   password: z.string().min(6, "סיסמה חייבת להכיל לפחות 6 תווים"),
   full_name: z.string().min(2, "שם מלא חייב להכיל לפחות 2 תווים"),
+  adminCode: z.string().optional(),
 })
 
 export type AuthState = {
@@ -48,15 +49,24 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
 export async function signup(prevState: AuthState, formData: FormData): Promise<AuthState> {
   const supabase = await createClient()
 
-  const data = {
+  const rawData = {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
     full_name: formData.get('full_name') as string,
+    adminCode: formData.get('adminCode') as string,
   }
 
-  const validated = signupSchema.safeParse(data)
+  const validated = signupSchema.safeParse(rawData)
   if (!validated.success) {
     return { error: validated.error.errors[0].message }
+  }
+
+  let role = 'candidate';
+  // Check for Admin Code
+  if (validated.data.adminCode && validated.data.adminCode === process.env.ADMIN_SECRET_KEY) {
+      role = 'admin';
+  } else if (validated.data.adminCode) {
+      return { error: "קוד מנהל שגוי" }
   }
 
   const { error } = await supabase.auth.signUp({
@@ -65,6 +75,7 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
     options: {
       data: {
         full_name: validated.data.full_name,
+        role: role, // Pass role to metadata
       },
     },
   })

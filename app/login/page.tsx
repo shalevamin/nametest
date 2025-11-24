@@ -84,7 +84,7 @@ export default function LoginPage() {
             <div className="text-white text-center max-w-lg">
                  <h2 className="text-4xl font-bold mb-4">מערכת ניהול פניות</h2>
                  <p className="text-xl text-blue-100">
-                    פתחון לב - שוברים את מעגל העוני
+                    עמוד התחברות מנהלים \ מתנדבים
                  </p>
             </div>
          </div>

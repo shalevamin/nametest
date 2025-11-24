@@ -8,10 +8,20 @@ import { signup } from "@/app/actions/auth"
 import { useActionState } from "react"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export default function SignupPage() {
   const [state, action, isPending] = useActionState(signup, undefined)
+  const searchParams = useSearchParams()
+  const [isAdminMode, setIsAdminMode] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get('type') === 'admin') {
+        setIsAdminMode(true)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (state?.error) {
@@ -44,9 +54,11 @@ export default function SignupPage() {
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto grid w-full max-w-[400px] gap-6">
           <div className="grid gap-2 text-center">
-            <h1 className="text-3xl font-bold text-blue-950">הרשמה</h1>
+            <h1 className="text-3xl font-bold text-blue-950">
+                {isAdminMode ? "הרשמת מנהל מערכת" : "הרשמה"}
+            </h1>
             <p className="text-balance text-muted-foreground">
-              צור חשבון חדש כדי להתחיל להתנדב
+              {isAdminMode ? "הזן את קוד המנהל כדי להירשם" : "צור חשבון חדש כדי להתחיל להתנדב"}
             </p>
           </div>
           <form action={action} className="grid gap-4">
@@ -85,6 +97,20 @@ export default function SignupPage() {
               />
               <p className="text-xs text-muted-foreground mt-1">לפחות 6 תווים</p>
             </div>
+
+            {isAdminMode && (
+                <div className="grid gap-2 animate-in fade-in slide-in-from-top-2">
+                    <Label htmlFor="adminCode">קוד מנהל</Label>
+                    <Input 
+                        id="adminCode" 
+                        name="adminCode" 
+                        type="password" 
+                        placeholder="הזן קוד סודי..."
+                        required 
+                        disabled={isPending}
+                    />
+                </div>
+            )}
             
             {state?.error && (
               <div className="text-sm text-red-500 bg-red-50 p-3 rounded-md text-center">
@@ -99,10 +125,35 @@ export default function SignupPage() {
                   נרשם...
                 </>
               ) : (
-                "הרשם"
+                isAdminMode ? "צור חשבון מנהל" : "הרשם"
               )}
             </Button>
           </form>
+          
+          {!isAdminMode && (
+             <div className="text-center">
+                <button 
+                    type="button"
+                    onClick={() => setIsAdminMode(true)}
+                    className="text-xs text-muted-foreground hover:underline"
+                >
+                    הרשמת מנהל
+                </button>
+             </div>
+          )}
+
+           {isAdminMode && (
+             <div className="text-center">
+                <button 
+                    type="button"
+                    onClick={() => setIsAdminMode(false)}
+                    className="text-xs text-muted-foreground hover:underline"
+                >
+                    חזרה להרשמה רגילה
+                </button>
+             </div>
+          )}
+
           <div className="mt-4 text-center text-sm">
             כבר יש לך חשבון?{" "}
             <Link href="/login" className="underline text-blue-600 hover:text-blue-800">
